@@ -1,18 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace GraphPathfinding
 {
-    public delegate int MovementCostFunction(IGraphNode sourceNode, IGraphNode destinationNode);
+    public delegate float MovementCostFunction(IGraphNode sourceNode, IGraphNode destinationNode);
 
     public delegate int CostFunction(IGraphNode node);
 
-    public delegate int HeuristicFunction(IGraphNode node, IGraphNode goalNode);
+    public delegate float HeuristicFunction(IGraphNode node, IGraphNode goalNode);
 
     public delegate bool FoundNodeValidFunction(IGraphNode sourceNode, IGraphNode destinationNode);
 
-    // TODO decouple this from Unity A* pathfinder
     public class AStarPathfinder
     {
         public MovementCostFunction movementCost = ManhattanDistance;
@@ -21,7 +20,7 @@ namespace GraphPathfinding
 
         public bool findNodeAdjacentToDestination = false;
 
-        private Dictionary<IGraphNode, int> nodeCosts = new Dictionary<IGraphNode, int>();
+        private Dictionary<IGraphNode, float> nodeCosts = new Dictionary<IGraphNode, float>();
         private Dictionary<IGraphNode, IGraphNode> nodeParents = new Dictionary<IGraphNode, IGraphNode>();
 
         public Path FindPath(IGraphNode startNode, IGraphNode destinationNode)
@@ -38,7 +37,7 @@ namespace GraphPathfinding
             return result;
         }
 
-        protected void SetNodeCost(IGraphNode node, int cost)
+        protected void SetNodeCost(IGraphNode node, float cost)
         {
             nodeCosts[node] = cost;
         }
@@ -48,7 +47,7 @@ namespace GraphPathfinding
             nodeParents[node] = parent;
         }
 
-        public int GetNodeCost(IGraphNode node)
+        public float GetNodeCost(IGraphNode node)
         {
             return nodeCosts[node];
         }
@@ -63,20 +62,17 @@ namespace GraphPathfinding
         protected Tuple<Path, HashSet<IGraphNode>> Run(IGraphNode sourceNode, IGraphNode destinationNode, int maxCost)
         {
             nodeParents = new Dictionary<IGraphNode, IGraphNode>();
-            nodeCosts = new Dictionary<IGraphNode, int>();
+            nodeCosts = new Dictionary<IGraphNode, float>();
 
-            var openNodes = new Dictionary<IGraphNode, int>();
+            var openNodes = new Dictionary<IGraphNode, float>();
             var closedNodes = new HashSet<IGraphNode>();
 
             openNodes[sourceNode] = 0;
             SetNodeCost(sourceNode, 0);
-            var currentNode = sourceNode;
-
-            var pathFound = false;
 
             while (openNodes.Any())
             {
-                currentNode = DequeueNextItem(openNodes);
+                var currentNode = DequeueNextItem(openNodes);
 
                 var currentNodeCost = GetNodeCost(currentNode);
 
@@ -151,14 +147,14 @@ namespace GraphPathfinding
         }
 
 
-        protected IGraphNode DequeueNextItem(Dictionary<IGraphNode, int> openList)
+        protected IGraphNode DequeueNextItem(Dictionary<IGraphNode, float> openList)
         {
             var nextItem = openList.Aggregate((l, r) => l.Value < r.Value ? l : r).Key;
             openList.Remove(nextItem);
             return nextItem;
         }
 
-        public static int ManhattanDistance(IGraphNode startNode, IGraphNode endNode)
+        public static float ManhattanDistance(IGraphNode startNode, IGraphNode endNode)
         {
             var dx = Math.Abs(startNode.X - endNode.X);
             var dy = Math.Abs(startNode.Y - endNode.Y);
